@@ -14,6 +14,10 @@ def play_with_cvlc_killafter(files, time):
     sleep(time)
     process.kill()
 
+def play_with_espeak(files, lang):
+    for i in files:
+        call(["espeak", "-v", lang, "-f", i])
+
 def shuffle_files(directory, first=0):
     files = [directory + "/" + f for f in listdir(directory)]
     random.shuffle(files)
@@ -24,5 +28,5 @@ def shuffle_files(directory, first=0):
 
 if __name__ == "__main__":
     print(shuffle_files("samples"))
-    play_with_cvlc(shuffle_files("samples", 1))
+    play_with_espeak(shuffle_files("texts"), "de")
 
