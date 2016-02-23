@@ -5,7 +5,6 @@ import os
 import sys
 import shutil
 
-from install_crontab import install_cron, uninstall_cron
 
 
 def parse_args():
@@ -36,14 +35,18 @@ def dest_dir(args):
     return os.path.join(args.prefix, args.name)
 
 
+def this_dir():
+    return os.path.dirname(os.path.abspath(os.path.dirname(__file__)))
+
+
 def check_for_installation(args):
     return os.path.exists(dest_dir(args))
 
 
 def copy_files(args):
     print "copying files..."
-    thisdir = os.path.abspath(os.path.dirname(__file__))
-    shutil.copytree(thisdir, dest_dir(args))
+    shutil.copytree(this_dir(), dest_dir(args),
+                                    ignore = shutil.ignore_patterns("env*"))
     print "done copying files."
 
 
@@ -65,8 +68,12 @@ def remove_user(args):
     print "done removing user."
 
 
+def _create_virtualenv(args, dest):
+    system_check("%s %s" % (args.virtualenv_command, os.path.join(dest, "env")))
+
+
 def create_virtualenv(args):
-    system_check("%s %s" % (args.virtualenv_command, os.path.join(dest_dir(args), "env")))
+    _create_virtualenv(args, dest_dir(args))
 
 
 def install(args):
@@ -74,6 +81,7 @@ def install(args):
     if check_for_installation(args):
         if args.user_only:
             create_user(args)
+            install_cron(args)
             return
         else:
             raise InstallException("already installed at %s" % args.prefix)
@@ -96,9 +104,34 @@ def remove(args):
         remove_files(args)
 
 
+def create_bootstrap_virtualenv(args):
+    _create_virtualenv(args, this_dir())
+
+
+def install_installation_requirements():
+    system_check("pip install -r %s" % os.path.join(this_dir(), "requirements-install.txt"))
+
+
+def use_bootstrap_virtualenv():
+    activate_this = os.path.join(this_dir(), "env", "bin", "activate_this.py")
+    execfile(activate_this, dict(__file__ = activate_this))
+
+
+def handle_bootstrap_virtualenv(args):
+    env_exists = os.path.exists(os.path.join(this_dir(), "env"))
+    if not env_exists:
+        create_bootstrap_virtualenv(args)
+    use_bootstrap_virtualenv()
+    if not env_exists:
+        install_installation_requirements()
+
+
 def main():
     args = parse_args()
     try:
+        handle_bootstrap_virtualenv(args)
+        global install_cron, uninstall_cron
+        from install_crontab import install_cron, uninstall_cron
         if args.remove:
             remove(args)
         else:
@@ -110,3 +143,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
