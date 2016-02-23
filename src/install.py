@@ -5,7 +5,7 @@ import os
 import sys
 import shutil
 
-#import crontab
+from install_crontab import install_cron, uninstall_cron
 
 
 def parse_args():
@@ -81,7 +81,7 @@ def install(args):
     copy_files(args)
     create_virtualenv(args)
     create_user(args)
-    #crontab.create_crontab(args)
+    install_cron(args)
 
 
 def remove(args):
@@ -90,7 +90,7 @@ def remove(args):
     if not installed and not args.force:
         raise InstallException("not installed at %s, nothing to remove" % args.prefix)
     if not args.instance_only:
-        #crontab.remove_crontab(args)
+        uninstall_cron(args)
         remove_user(args)
     if installed:
         remove_files(args)
