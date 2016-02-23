@@ -6,6 +6,7 @@ import sys
 CRONTAB_TAG = "ubuntu-cleanup-annoyifier"
 
 def install_cron(args):
+    print "installing command to crontab..."
     my_cron = CronTab(user = args.name)
     
 #    job  = my_cron.new(command = executable_path(args))
@@ -18,6 +19,7 @@ def install_cron(args):
     my_cron.write_to_user(user = args.name)
 
 def uninstall_cron(args):
+    print "removing command from crontab..."
     my_cron = CronTab(user = args.name)
     my_cron.remove_all(comment = CRONTAB_TAG)
     my_cron.write_to_user(user = args.name)
